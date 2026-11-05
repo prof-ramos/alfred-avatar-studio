@@ -20,7 +20,7 @@ export function SimulationPanel() {
   return (
     <div className="space-y-4">
       <Section title="Cenários de conversação">
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 gap-2">
           {SCENARIO_IDS.map((id) => (
             <Button key={id} testId={`scenario-${id}`} pressed={snap.scenarioId === id} onClick={() => sim.runScenario(id)}>
               {SCENARIOS[id].label}
@@ -33,7 +33,7 @@ export function SimulationPanel() {
       </Section>
 
       <Section title="Forçar estado operacional">
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-3 gap-2">
           {OPERATIONAL_STATES.map((s) => (
             <Button key={s} testId={`state-${s}`} pressed={snap.state === s} onClick={() => sim.forceState(s)}>
               {STATE_LABELS[s]}
@@ -94,7 +94,7 @@ export function SimulationPanel() {
             />
           );
         })}
-        <p className="text-xs text-slate-500">Botão físico (GPIO 0): clique no botão BOOT do robô ou segure a tecla B ou a barra de espaço.</p>
+        <p className="text-xs text-fg-3">Botão físico (GPIO 0): clique no botão BOOT do robô ou segure B ou a barra de espaço</p>
       </Section>
 
       <Section title="Limiares de gesto">

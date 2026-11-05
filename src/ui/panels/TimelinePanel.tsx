@@ -4,8 +4,11 @@ import { CHANNEL_RANGES } from '../../domain/animation';
 import { CHANNEL_LABELS, EASING_LABELS } from '../../domain/labels';
 import { newId } from '../../domain/project';
 import { ANIMATION_CHANNELS, EASINGS, type Animation, type AnimationChannel, type Easing, type PlaybackMode } from '../../domain/types';
+import { Pause, Play, Plus, SkipBack, Square, StepBack, StepForward } from 'lucide-react';
 import { useSim, useStore } from '../context';
-import { Button, Section, Select, Slider } from '../controls';
+import { Button, FIELD, Section, Select, Slider } from '../controls';
+
+const ICON = { size: 16, strokeWidth: 1.5, 'aria-hidden': true } as const;
 
 function Playhead({ duration }: { duration: number }) {
   const { sim } = useSim();
@@ -24,8 +27,8 @@ function Playhead({ duration }: { duration: number }) {
   }, [sim, duration]);
   return (
     <>
-      <div ref={ref} data-testid="tl-playhead" className="pointer-events-none absolute top-0 bottom-0 w-0.5 bg-amber-400" />
-      <span ref={label} data-testid="tl-position" className="absolute -bottom-5 right-0 font-mono text-xs text-slate-400" />
+      <div ref={ref} data-testid="tl-playhead" className="pointer-events-none absolute top-0 bottom-0 w-px bg-fg" />
+      <span ref={label} data-testid="tl-position" className="absolute -bottom-5 right-0 font-mono text-xs text-fg-2" />
     </>
   );
 }
@@ -138,7 +141,7 @@ export function TimelinePanel() {
           onChange={(v) => store.selectAnimation(v || null)}
           testId="tl-animation-select"
         />
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           <Button testId="tl-new" onClick={createAnimation}>
             Nova
           </Button>
@@ -152,7 +155,7 @@ export function TimelinePanel() {
         {anim && (
           <>
             <div className="flex items-center justify-between gap-3">
-              <label htmlFor="tl-name" className="text-sm text-slate-300">
+              <label htmlFor="tl-name" className="text-sm text-fg-2">
                 Nome
               </label>
               <input
@@ -164,11 +167,11 @@ export function TimelinePanel() {
                   const v = e.target.value.replace(/[<>\u0000-\u001f]/g, '');
                   if (v.trim()) updateAnim((a) => (a.name = v));
                 }}
-                className="w-40 rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-sm"
+                className={`${FIELD} w-40`}
               />
             </div>
             <div className="flex items-center justify-between gap-3">
-              <label htmlFor="tl-duration" className="text-sm text-slate-300">
+              <label htmlFor="tl-duration" className="text-sm text-fg-2">
                 Duração (ms)
               </label>
               <input
@@ -187,7 +190,7 @@ export function TimelinePanel() {
                       for (const k of a.keyframes) k.t = Math.min(k.t, v);
                     });
                 }}
-                className="w-24 rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-right font-mono text-sm"
+                className={`${FIELD} w-24 text-right font-mono tabular-nums`}
               />
             </div>
             <Select<PlaybackMode>
@@ -206,31 +209,32 @@ export function TimelinePanel() {
 
       {anim && (
         <Section title="Linha do tempo">
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             <Button testId="tl-rewind" title="Voltar ao início" onClick={() => sim.rewind()}>
-              ⏮
+              <SkipBack {...ICON} />
             </Button>
             <Button testId="tl-step-back" title="Quadro anterior" onClick={() => sim.step(-1)}>
-              ◀︎|
+              <StepBack {...ICON} />
             </Button>
-            <Button testId="tl-play" variant="primary" pressed={snap.playback.playing} title="Reproduzir" onClick={() => sim.play(anim.id)}>
-              ▶ Play
+            <Button testId="tl-play" pressed={snap.playback.playing} title="Reproduzir" onClick={() => sim.play(anim.id)}>
+              <Play {...ICON} />
             </Button>
             <Button testId="tl-pause" title="Pausar" onClick={() => sim.pause()}>
-              ❚❚
+              <Pause {...ICON} />
             </Button>
             <Button testId="tl-stop" title="Parar" onClick={() => sim.stop()}>
-              ■
+              <Square {...ICON} />
             </Button>
             <Button testId="tl-step" title="Próximo quadro" onClick={() => sim.step(1)}>
-              |▶︎
+              <StepForward {...ICON} />
             </Button>
           </div>
-          <div className="pb-5 pt-1">
+          <div className="relative h-12 rounded-lg border border-line bg-sink">
+            {/* Trilha recuada 12 px para os marcadores das pontas caberem na barra. */}
             <div
               ref={barRef}
               data-testid="timeline"
-              className="relative h-12 cursor-pointer rounded-md border border-slate-700 bg-slate-900"
+              className="absolute inset-y-0 right-3 left-3 cursor-pointer"
               onPointerDown={(e) => {
                 if (e.target === e.currentTarget) sim.seek(timeFromClientX(e.clientX));
               }}
@@ -250,7 +254,7 @@ export function TimelinePanel() {
                   onPointerMove={onMarkerMove}
                   onPointerUp={onMarkerUp}
                   className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 border ${
-                    k.id === selectedKf ? 'border-amber-200 bg-amber-400' : 'border-sky-200 bg-sky-500'
+                    k.id === selectedKf ? 'border-accent bg-accent' : 'border-fg-2 bg-raised-2'
                   }`}
                   style={{ left: `${(k.t / anim.durationMs) * 100}%`, touchAction: 'none' }}
                 />
@@ -258,9 +262,11 @@ export function TimelinePanel() {
               {snap.playback.animId === anim.id && snap.playback.active && <Playhead duration={anim.durationMs} />}
             </div>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="h-2" />
+          <div className="flex flex-wrap gap-2">
             <Button testId="tl-add-keyframe" onClick={() => addKeyframeAt(snap.playback.animId === anim.id ? sim.animationPosition() : 0)}>
-              + Quadro-chave na agulha
+              <Plus {...ICON} />
+              Quadro-chave na agulha
             </Button>
             <Button
               testId="tl-delete-keyframe"
@@ -271,14 +277,14 @@ export function TimelinePanel() {
               Remover quadro-chave
             </Button>
           </div>
-          <p className="text-xs text-slate-500">Arraste os marcadores para mover. Clique na barra para posicionar a agulha; duplo clique adiciona um quadro-chave.</p>
+          <p className="text-xs text-fg-3">Arraste os marcadores para mover. Clique na barra para posicionar a agulha e dê duplo clique para adicionar um quadro-chave.</p>
         </Section>
       )}
 
       {anim && kf && (
         <Section title="Quadro-chave selecionado">
           <div className="flex items-center justify-between gap-3">
-            <label htmlFor="kf-time" className="text-sm text-slate-300">
+            <label htmlFor="kf-time" className="text-sm text-fg-2">
               Instante (ms)
             </label>
             <input
@@ -296,7 +302,7 @@ export function TimelinePanel() {
                     if (k) k.t = v;
                   });
               }}
-              className="w-24 rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-right font-mono text-sm"
+              className={`${FIELD} w-24 text-right font-mono tabular-nums`}
             />
           </div>
           <Select<Easing>
@@ -317,8 +323,8 @@ export function TimelinePanel() {
               const v = kf.values[ch];
               const on = v !== undefined;
               return (
-                <div key={ch} className="rounded-md border border-slate-800 p-2">
-                  <label className="flex items-center gap-2 text-sm text-slate-300">
+                <div key={ch} className="rounded-lg border border-line p-3">
+                  <label className="flex items-center gap-2 text-sm text-fg-2">
                     <input
                       type="checkbox"
                       checked={on}
@@ -331,7 +337,7 @@ export function TimelinePanel() {
                           else delete k.values[ch];
                         })
                       }
-                      className="accent-sky-400"
+                     
                     />
                     {CHANNEL_LABELS[ch]}
                   </label>

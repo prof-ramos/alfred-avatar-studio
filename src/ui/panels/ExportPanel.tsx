@@ -76,7 +76,7 @@ export function ExportPanel() {
       </Section>
 
       <Section title="Pacote de estados ESPHome">
-        <p className="text-xs text-slate-500">{ESPHOME_STATES.map((e) => e.file).join(', ')}</p>
+        <p className="text-xs text-fg-3">{ESPHOME_STATES.map((e) => e.file).join(', ')}</p>
         <Button
           testId="export-esphome"
           disabled={!!busy}
@@ -104,7 +104,7 @@ export function ExportPanel() {
           onChange={setFps}
           testId="export-fps"
         />
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           <Button
             testId="export-spritesheet"
             disabled={!!busy || !selectedAnim}
@@ -139,7 +139,7 @@ export function ExportPanel() {
             Sequência JPEG (.zip)
           </Button>
         </div>
-        <p className="text-xs text-slate-500">O MJPEG pode ser copiado para o cartão MicroSD e reproduzido no Spotpear Ball V2 sem regravar o firmware.</p>
+        <p className="text-xs text-fg-3">O MJPEG roda direto do cartão MicroSD no Spotpear Ball V2, sem regravar o firmware</p>
       </Section>
 
       <Section title="C Array / LVGL (RGB565)">
@@ -191,7 +191,7 @@ export function ExportPanel() {
       </Section>
 
       {busy && (
-        <div role="status" data-testid="export-progress" className="rounded-md border border-sky-700 bg-sky-950/50 p-2 text-sm text-sky-200">
+        <div role="status" data-testid="export-progress" className="rounded-lg border border-line bg-raised p-3 font-mono text-xs tabular-nums text-fg-2">
           Exportando {busy}
           {progress ? `: ${progress.done}/${progress.total} quadros` : '…'}
         </div>

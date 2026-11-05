@@ -74,7 +74,7 @@ function Overlay({ circleGuide }: { circleGuide: boolean }) {
           cy="120"
           r={120 - SAFE_AREA_MARGIN}
           fill="none"
-          stroke="#FBBF24"
+          stroke="#E0A84A"
           strokeWidth="1"
           strokeDasharray="3 3"
         />

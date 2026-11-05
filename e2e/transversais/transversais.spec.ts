@@ -83,6 +83,7 @@ test.describe('Transversais @tx', () => {
     await page.getByTestId('tl-play').click();
     await page.waitForTimeout(2500);
     const fps30 = await bridge<number>(page, 'getFps');
+    await page.getByTestId('tab-diagnostics').click();
     await page.getByTestId('fps-select').selectOption('15');
     await page.waitForTimeout(2000);
     const fps15 = await bridge<number>(page, 'getFps');

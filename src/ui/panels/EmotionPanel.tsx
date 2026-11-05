@@ -2,7 +2,7 @@
 import { EMOTION_LABELS } from '../../domain/labels';
 import { EMOTIONS } from '../../domain/types';
 import { useSim, useStore } from '../context';
-import { Button, Section, Slider, Toggle } from '../controls';
+import { Button, FIELD, Section, Slider, Toggle } from '../controls';
 
 export function EmotionPanel() {
   const { sim, snap } = useSim();
@@ -12,7 +12,7 @@ export function EmotionPanel() {
   return (
     <div className="space-y-4">
       <Section title="Emoção">
-        <div className="grid grid-cols-3 gap-1.5" role="radiogroup" aria-label="Emoções">
+        <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Emoções">
           {EMOTIONS.map((id) => (
             <Button key={id} testId={`emotion-${id}`} pressed={user.id === id} onClick={() => sim.setEmotion({ id, intensity: user.intensity })}>
               {EMOTION_LABELS[id]}
@@ -30,17 +30,17 @@ export function EmotionPanel() {
           testId="emotion-intensity"
         />
         {snap.scenarioId && snap.emotion.id !== user.id && (
-          <p className="text-xs text-amber-300">
-            O cenário em execução aplica temporariamente a emoção “{EMOTION_LABELS[snap.emotion.id]}”.
+          <p className="text-xs text-warning">
+            O cenário em execução aplica temporariamente a emoção “{EMOTION_LABELS[snap.emotion.id]}”
           </p>
         )}
-        <p className="text-xs text-slate-500">Estado e emoção são independentes: a emoção permanece ao trocar de estado.</p>
+        <p className="text-xs text-fg-3">Estado e emoção são independentes: a emoção permanece ao trocar de estado</p>
       </Section>
 
       <Section title="Comportamento espontâneo">
         <Toggle label="Piscadas e micromovimentos" checked={snap.spontaneous} onChange={(v) => sim.setSpontaneous(v)} testId="spontaneous-toggle" />
         <div className="flex items-center justify-between gap-3">
-          <label htmlFor="seed" className="text-sm text-slate-300">
+          <label htmlFor="seed" className="text-sm text-fg-2">
             Semente pseudoaleatória
           </label>
           <input
@@ -57,10 +57,10 @@ export function EmotionPanel() {
                   d.runtime.randomSeed = v;
                 });
             }}
-            className="w-28 rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-right font-mono text-sm"
+            className={`${FIELD} w-28 text-right font-mono tabular-nums`}
           />
         </div>
-        <p className="text-xs text-slate-500">A mesma semente reproduz exatamente a mesma sequência de piscadas.</p>
+        <p className="text-xs text-fg-3">A mesma semente reproduz a mesma sequência de piscadas</p>
       </Section>
     </div>
   );

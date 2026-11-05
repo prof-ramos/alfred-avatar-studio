@@ -1,5 +1,28 @@
 @import "tailwindcss";
 
+/*
+ * Tokens de interface (polimento com o skill unslop, de Damir Sokolovsky, CC BY 4.0).
+ * Neutros "ink" de baixa saturação: bancada de eletrônica à noite.
+ * O ciano do Alfred é o único destaque e aparece só no estado ativo e no LED de status.
+ */
+@theme {
+  --color-sink: #07080d;
+  --color-page: #0b0d14;
+  --color-surface: #11141c;
+  --color-raised: #1a1e28;
+  --color-raised-2: #232835;
+  --color-line: rgb(238 240 245 / 0.08);
+  --color-line-2: rgb(238 240 245 / 0.14);
+  --color-fg: #eef0f5;
+  --color-fg-2: #a3a9b8;
+  --color-fg-3: #7a8296;
+  --color-accent: #7dd3fc;
+  --color-positive: #4cc38a;
+  --color-negative: #e5484d;
+  --color-warning: #e0a84a;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 :root {
   color-scheme: dark;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -7,19 +30,29 @@
 
 body {
   margin: 0;
-  background: #020617;
+  background: var(--color-page);
+}
+
+input[type="range"],
+input[type="checkbox"] {
+  accent-color: var(--color-fg-2);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .touch-marker {
-  fill: rgba(251, 191, 36, 0.25);
-  stroke: #fbbf24;
+  fill: rgb(238 240 245 / 0.18);
+  stroke: #eef0f5;
   stroke-width: 1.5;
-  animation: touch-fade 700ms ease-out forwards;
+  animation: touch-fade 700ms var(--ease-out) forwards;
 }
 
 .touch-marker-cancel {
-  fill: rgba(248, 113, 113, 0.25);
-  stroke: #f87171;
+  fill: rgb(229 72 77 / 0.2);
+  stroke: #e5484d;
 }
 
 @keyframes touch-fade {
