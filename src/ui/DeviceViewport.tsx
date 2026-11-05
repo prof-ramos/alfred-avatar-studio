@@ -132,7 +132,7 @@ function DisplayCanvas({ cssSize, round, pixelated }: { cssSize: number; round: 
 
 function RobotBody({ showLegs }: { showLegs: boolean }) {
   const { sim, snap } = useSim();
-  const height = showLegs ? 470 : 410;
+  const height = showLegs ? 425 : 385;
   return (
     <svg
       data-testid="robot-body"
@@ -149,26 +149,27 @@ function RobotBody({ showLegs }: { showLegs: boolean }) {
           <stop offset="100%" stopColor="#B8BDC7" />
         </radialGradient>
         <radialGradient id="bezel" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stopColor="#1F2937" />
-          <stop offset="100%" stopColor="#030712" />
+          <stop offset="0%" stopColor="#111827" />
+          <stop offset="100%" stopColor="#000000" />
         </radialGradient>
       </defs>
       {showLegs && (
-        <g data-testid="robot-legs" fill="#D1D5DB" stroke="#9CA3AF" strokeWidth="2">
-          <path d="M130 340 L92 452 Q90 462 102 462 L124 462 Q134 462 136 452 L162 356 Z" />
-          <path d="M270 340 L308 452 Q310 462 298 462 L276 462 Q266 462 264 452 L238 356 Z" />
-          <path d="M188 372 L186 456 Q186 466 196 466 L204 466 Q214 466 214 456 L212 372 Z" fill="#C7CBD2" />
+        // Quatro pés curtos e removíveis, em cinza-escuro (como no Spotpear Ball V2).
+        <g data-testid="robot-legs">
+          <rect x="146" y="336" width="34" height="66" rx="15" fill="#374151" />
+          <rect x="220" y="336" width="34" height="66" rx="15" fill="#374151" />
+          <rect x="98" y="322" width="42" height="96" rx="19" fill="#4B5563" />
+          <rect x="260" y="322" width="42" height="96" rx="19" fill="#4B5563" />
+          <rect x="106" y="330" width="9" height="74" rx="4.5" fill="#6B7280" opacity="0.7" />
+          <rect x="268" y="330" width="9" height="74" rx="4.5" fill="#6B7280" opacity="0.7" />
         </g>
       )}
-      <circle cx="200" cy="200" r="180" fill="url(#shell)" stroke="#9CA3AF" strokeWidth="1.5" />
-      <circle cx="200" cy="200" r="136" fill="url(#bezel)" />
+      {/* Carcaça branca fosca, levemente ovalada */}
+      <ellipse cx="200" cy="200" rx="184" ry="176" fill="url(#shell)" stroke="#AEB4BE" strokeWidth="1.5" />
+      {/* Face frontal preta brilhante que envolve o display */}
+      <circle cx="200" cy="200" r="150" fill="url(#bezel)" />
+      <path d="M92 132 A128 128 0 0 1 250 76" fill="none" stroke="#FFFFFF" strokeOpacity="0.10" strokeWidth="6" strokeLinecap="round" />
       <circle cx="200" cy="200" r="122" fill="#000" />
-      {/* Grade do alto-falante */}
-      <g fill="#9CA3AF">
-        {[-24, -12, 0, 12, 24].map((dx) => (
-          <circle key={dx} cx={200 + dx} cy={358} r="2.6" />
-        ))}
-      </g>
       {/* Botão físico Boot (GPIO 0) na parte superior */}
       <g
         data-testid="gpio0-button"
@@ -200,7 +201,7 @@ export function DeviceViewport() {
   const { showLegs } = state.project.device;
 
   if (mode === 'robot') {
-    const h = showLegs ? 470 : 410;
+    const h = showLegs ? 425 : 385;
     return (
       <div data-testid="device-viewport" data-mode="robot" className="relative" style={{ width: 400, height: h }}>
         <RobotBody showLegs={showLegs} />

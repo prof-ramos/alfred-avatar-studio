@@ -118,7 +118,7 @@ test.describe('Fase 1 @f1', () => {
     if (!body) throw new Error('corpo não visível');
     await page.mouse.click(body.x + 70, body.y + 200); // moldura/carcaça
     await page.mouse.click(body.x + 30, body.y + 200); // carcaça
-    await page.mouse.click(body.x + 110, body.y + 440); // perna
+    await page.mouse.click(body.x + 119, body.y + 405); // perna dianteira
     expect(await bridge<unknown[]>(page, 'getTouchHistory')).toEqual([]);
     expect(await getState(page)).toBe('idle');
   });
