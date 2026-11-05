@@ -255,4 +255,27 @@ test.describe('Fase 3 @f3', () => {
     await page.getByTestId('mode-display').click();
     await expect(page.getByTestId('device-viewport')).toHaveAttribute('data-mode', 'display');
   });
+
+  test('E2E-F3-16 animação acima de 900 quadros é recusada sem truncar', async ({ page }) => {
+    await openStudio(page);
+    await page.getByTestId('tab-animation').click();
+    await page.getByTestId('tl-new').click();
+    await page.getByTestId('tl-name').fill('Longa');
+    await page.getByTestId('tl-duration').fill('40000');
+    await page.getByTestId('tab-export').click();
+    await page.getByTestId('export-animation').selectOption({ label: 'Longa' });
+    await page.getByTestId('export-fps').selectOption('30');
+    await expect(page.getByTestId('export-frame-count')).toHaveText('1.200 quadros de até 900');
+
+    let downloads = 0;
+    page.on('download', () => downloads++);
+    await page.getByTestId('export-mjpeg').click();
+    await expect(page.getByTestId('toast-error')).toContainText('limite de 900');
+    expect(downloads).toBe(0);
+
+    await page.getByTestId('export-fps').selectOption('15');
+    await expect(page.getByTestId('export-frame-count')).toHaveText('600 quadros de até 900');
+    const mjpeg = await downloadBytes(page, () => page.getByTestId('export-mjpeg').click());
+    expect(countJpegFrames(mjpeg.bytes)).toBe(600);
+  });
 });

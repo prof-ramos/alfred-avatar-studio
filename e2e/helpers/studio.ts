@@ -26,7 +26,11 @@ export async function openStudio(page: Page, opts: StudioOptions = {}): Promise<
   await page.goto('/?test=1');
   await page.waitForFunction(() => document.documentElement.dataset.ready === 'true' && !!window.__ALFRED_TEST__);
   await expect(page.getByTestId('display-canvas')).toBeVisible();
-  if (opts.clock) await page.clock.pauseAt(T0 + 1000);
+  if (opts.clock) {
+    // Pausa logo à frente do instante atual: a carga pode levar mais de 1 s em máquinas ocupadas.
+    const now = await page.evaluate(() => Date.now());
+    await page.clock.pauseAt(Math.max(T0 + 1000, now + 100));
+  }
   if (opts.noSpontaneous) {
     await page.getByTestId('tab-emotions').click();
     await page.getByTestId('spontaneous-toggle').uncheck();

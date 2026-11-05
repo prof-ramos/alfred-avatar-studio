@@ -239,6 +239,7 @@ Prioridade: **P0** bloqueia a entrega da fase; **P1** deve passar ou ter exceç�
 | E2E-F2-13 | RF-19 | Exportar pacote ESPHome | Exatamente 7 arquivos: `idle`, `listening`, `thinking`, `replying`, `error`, `loading`, `mute` (`.png`, 240 × 240) | P0 |
 | E2E-F2-14 | RF-09 | Criar, duplicar e alternar entre projetos | Lista mostra todos; alterações em um não afetam o outro; persistem após recarga | P0 |
 | E2E-F2-15 | RF-12, 18, 19 | **Critério de aceite da Fase 2**: criar e salvar dois avatares distintos, exportar pacote ESPHome, reimportar JSON | Pacote completo e reimportação com 100% de integridade | P0 |
+| E2E-F2-16 | RF-19 | Pausar `olhar-lateral` em ~600 ms e exportar o PNG da pose atual | O PNG exportado é igual aos pixels do canvas; depois de parar a animação, volta a acompanhar a pose sem animação | P1 |
 
 ### 5.3. Fase 3 — Animação, gestos avançados, som e mídia (`@f3`)
 
@@ -259,6 +260,7 @@ Prioridade: **P0** bloqueia a entrega da fase; **P1** deve passar ou ter exceç�
 | E2E-F3-13 | RF-22 | Exportar C Array / Header LVGL | `.c` e `.h` gerados; array com `240 × 240 × 2 = 115200` bytes; `lv_img_dsc_t` declarado | P1 |
 | E2E-F3-14 | RF-23 | Abrir `diagnostics-panel` e tocar em pontos conhecidos | FPS exibido; coordenadas lógicas corretas; histórico acumula toques na ordem | P1 |
 | E2E-F3-15 | RF-14, 15, 16, 20, 21 | **Critério de aceite da Fase 3**: criar animação com som, testar swipes, exportar MJPEG e spritesheet | Fluxo conclui sem travamento (nenhuma tarefa longa > 2 s; página responde) | P0 |
+| E2E-F3-16 | RF-21 | Animação de 40 s exportada a 30 FPS e depois a 15 FPS | A 30 FPS (1.200 quadros), nenhum arquivo é baixado e aparece um aviso de “limite de 900”; a 15 FPS, o MJPEG sai com 600 quadros | P1 |
 
 ### 5.4. Casos transversais (`@tx`)
 
@@ -321,9 +323,9 @@ Os helpers ficam em `e2e/helpers/exports.ts` e leem os bytes com `fs` do Node, s
 | RF-16 | Feedback sonoro sintético | F3-08, F3-09, F3-10 | — |
 | RF-17 | Prévia RGB565 | F2-06, F2-07 | Sim |
 | RF-18 | Exportação/importação JSON | F2-08 a F2-11 | Sim |
-| RF-19 | PNG e pacote ESPHome | F2-07, F2-12, F2-13 | Sim |
+| RF-19 | PNG e pacote ESPHome | F2-07, F2-12, F2-13, F2-16 | Sim |
 | RF-20 | Spritesheet | F3-11 | Sim |
-| RF-21 | MJPEG para cartão SD | F3-12 | Sim |
+| RF-21 | MJPEG para cartão SD | F3-12, F3-16 | Sim |
 | RF-22 | C Array / LVGL | F3-13 | Sim |
 | RF-23 | Painel de diagnóstico | F3-14 | — |
 | RF-24 | Gravação de sequências de toque | Fora do escopo (P2) | — |
@@ -407,10 +409,10 @@ Uma fase só é declarada concluída quando:
 
 | Suíte | Resultado |
 |---|---|
-| Vitest (`npm test`) | 83 de 83 passando, em 9 arquivos |
-| Playwright `chromium` | 68 de 68 passando |
+| Vitest (`npm test`) | 84 de 84 passando, em 9 arquivos |
+| Playwright `chromium` | 70 de 70 passando |
 | Playwright `chromium-dpr2` (`@dpr`) | 5 de 5 passando |
-| Instabilidade (`--repeat-each=3`, `chromium`) | 204 de 204 passando, sem testes instáveis |
+| Instabilidade (`--repeat-each=3`, `chromium`) | 210 de 210 passando, sem testes instáveis |
 | Playwright `webkit` | **Não executado**: o navegador WebKit não está instalado no ambiente usado. Executar no Mac com `npx playwright install webkit && npx playwright test --project=webkit` |
 
 Verificações ainda pendentes, conforme o PRD §1:

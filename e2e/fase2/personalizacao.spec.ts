@@ -279,4 +279,44 @@ test.describe('Fase 2 @f2', () => {
     expect({ ...imported, project: { ...imported.project, updatedAt: 0 } }).toEqual({ ...original, project: { ...original.project, updatedAt: 0 } });
     await ctx.close();
   });
+
+  test('E2E-F2-16 PNG da pose atual preserva a animação pausada', async ({ page }) => {
+    await openStudio(page, { clock: true, noSpontaneous: true });
+    await page.getByTestId('tab-animation').click();
+    await page.getByTestId('tl-play').click();
+    await page.clock.runFor(600);
+    await page.getByTestId('tl-pause').click();
+    await page.clock.runFor(40);
+    expect((await bridge<{ gazeX: number }>(page, 'getPose')).gazeX).toBeLessThan(-10);
+
+    await page.getByTestId('tab-export').click();
+    await page.getByTestId('export-png-bg').selectOption('square');
+    const matchesCanvas = async () => {
+      const { bytes } = await downloadBytes(page, () => page.getByTestId('export-png').click());
+      return page.evaluate(async (b64) => {
+        const img = new Image();
+        img.src = `data:image/png;base64,${b64}`;
+        await img.decode();
+        const c = document.createElement('canvas');
+        c.width = c.height = 240;
+        const ctx = c.getContext('2d')!;
+        ctx.drawImage(img, 0, 0);
+        const exported = ctx.getImageData(0, 0, 240, 240).data;
+        const live = (document.querySelector('[data-testid=display-canvas]') as HTMLCanvasElement).getContext('2d')!.getImageData(0, 0, 240, 240).data;
+        let diff = 0;
+        for (let i = 0; i < live.length; i++) if (Math.abs(live[i] - exported[i]) > 2) diff++;
+        return diff / live.length;
+      }, Buffer.from(bytes).toString('base64'));
+    };
+    expect(await matchesCanvas()).toBeLessThan(0.001);
+
+    // Sem a animação, o PNG exportado não corresponde mais à pose pausada.
+    const paused = await bridge<{ gazeX: number }>(page, 'getPose');
+    await page.getByTestId('tab-animation').click();
+    await page.getByTestId('tl-stop').click();
+    await page.clock.runFor(40);
+    expect((await bridge<{ gazeX: number }>(page, 'getPose')).gazeX).not.toBeCloseTo(paused.gazeX);
+    await page.getByTestId('tab-export').click();
+    expect(await matchesCanvas()).toBeLessThan(0.001);
+  });
 });

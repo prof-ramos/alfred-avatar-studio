@@ -9,7 +9,7 @@ import {
   generateLvglSource,
   toCIdentifier,
 } from './formats';
-import { frameTimes } from './frames';
+import { FrameLimitError, frameTimes } from './frames';
 
 describe('RGB565', () => {
   it('converte cores primárias', () => {
@@ -69,7 +69,14 @@ describe('spritesheet', () => {
   it('amostra a animação na taxa pedida', () => {
     expect(frameTimes(1000, 30)).toHaveLength(30);
     expect(frameTimes(2400, 15)).toHaveLength(36);
-    expect(frameTimes(60_000, 30)).toHaveLength(900);
+  });
+
+  it('recusa exportações acima de 900 quadros em vez de truncar', () => {
+    expect(() => frameTimes(60_000, 30)).toThrow(FrameLimitError);
+    expect(() => frameTimes(60_000, 30)).toThrow(/limite de 900/);
+    const t = frameTimes(60_000, 15);
+    expect(t).toHaveLength(900);
+    expect(t.at(-1)).toBeGreaterThan(60_000 - 1000 / 15 - 1);
   });
 });
 

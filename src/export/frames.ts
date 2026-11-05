@@ -59,9 +59,37 @@ export async function blobToBytes(blob: Blob): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
-/** Posições (ms) dos quadros de uma animação amostrada na taxa informada. */
-export function frameTimes(durationMs: number, fps: number, maxFrames = 900): number[] {
-  const count = Math.min(maxFrames, Math.max(1, Math.round((durationMs / 1000) * fps)));
+/** Limite de quadros por exportação de animação (30 s a 30 FPS ou 60 s a 15 FPS). */
+export const MAX_EXPORT_FRAMES = 900;
+
+export class FrameLimitError extends Error {
+  constructor(
+    readonly frames: number,
+    readonly fps: number,
+    readonly limit: number,
+  ) {
+    const maxSeconds = Math.floor(limit / fps);
+    super(
+      `Animação longa demais para exportar: ${frames.toLocaleString('pt-BR')} quadros a ${fps} FPS (limite de ${limit}). ` +
+        (fps > 15 ? 'Use 15 FPS ou encurte a animação' : 'Encurte a animação') +
+        ` para até ${maxSeconds} s`,
+    );
+    this.name = 'FrameLimitError';
+  }
+}
+
+/** Quantidade de quadros de uma animação na taxa informada. */
+export function frameCount(durationMs: number, fps: number): number {
+  return Math.max(1, Math.round((durationMs / 1000) * fps));
+}
+
+/**
+ * Posições (ms) dos quadros de uma animação amostrada na taxa informada.
+ * Acima do limite, lança FrameLimitError em vez de truncar a animação.
+ */
+export function frameTimes(durationMs: number, fps: number, maxFrames = MAX_EXPORT_FRAMES): number[] {
+  const count = frameCount(durationMs, fps);
+  if (count > maxFrames) throw new FrameLimitError(count, fps, maxFrames);
   return Array.from({ length: count }, (_, i) => Math.round((i * 1000) / fps));
 }
 

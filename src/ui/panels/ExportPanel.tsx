@@ -10,13 +10,14 @@ import {
   triggerDownload,
 } from '../../export/assetExporter';
 import { ESPHOME_STATES, type LvglVersion } from '../../export/formats';
+import { MAX_EXPORT_FRAMES, frameCount, type PoseRequest } from '../../export/frames';
 import type { BackgroundMode } from '../../render/canvasRenderer';
 import { useSim, useStore } from '../context';
 import { Button, Section, Select, Toggle } from '../controls';
 
 export function ExportPanel() {
   const { store, state } = useStore();
-  const { snap } = useSim();
+  const { sim, snap } = useSim();
   const [busy, setBusy] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [pngBg, setPngBg] = useState<BackgroundMode>('circle');
@@ -35,7 +36,7 @@ export function ExportPanel() {
     setProgress(null);
     try {
       await fn();
-      store.toast('success', `${label}: exportação concluída.`);
+      store.toast('success', `${label}: exportação concluída`);
     } catch (e) {
       store.toast('error', `${label}: ${(e as Error).message}`);
     } finally {
@@ -44,7 +45,16 @@ export function ExportPanel() {
     }
   };
 
-  const current = { state: snap.state, emotion: snap.emotion };
+  /** Pose exibida no momento do clique, incluindo a animação pausada ou posicionada na linha do tempo. */
+  const currentPose = (): PoseRequest => {
+    const pb = sim.getSnapshot().playback;
+    return {
+      state: snap.state,
+      emotion: snap.emotion,
+      ...(pb.active && pb.animId ? { animationId: pb.animId, animationPositionMs: sim.animationPosition() } : {}),
+    };
+  };
+  const selectedFrames = selectedAnim ? frameCount(state.project.animations[selectedAnim].durationMs, fps) : 0;
 
   return (
     <div className="space-y-4">
@@ -69,7 +79,7 @@ export function ExportPanel() {
         <Button
           testId="export-png"
           disabled={!!busy}
-          onClick={() => run('PNG', async () => triggerDownload(await exportPng(store.project, current, pngBg)))}
+          onClick={() => run('PNG', async () => triggerDownload(await exportPng(store.project, currentPose(), pngBg)))}
         >
           Exportar PNG da pose atual
         </Button>
@@ -104,6 +114,14 @@ export function ExportPanel() {
           onChange={setFps}
           testId="export-fps"
         />
+        {selectedAnim && (
+          <p
+            data-testid="export-frame-count"
+            className={`font-mono text-xs tabular-nums ${selectedFrames > MAX_EXPORT_FRAMES ? 'text-negative' : 'text-fg-3'}`}
+          >
+            {selectedFrames.toLocaleString('pt-BR')} quadros de até {MAX_EXPORT_FRAMES}
+          </p>
+        )}
         <div className="flex flex-wrap gap-2">
           <Button
             testId="export-spritesheet"
@@ -177,7 +195,7 @@ export function ExportPanel() {
                     swap,
                     source:
                       carraySource === 'current' || !selectedAnim
-                        ? { kind: 'current', req: current }
+                        ? { kind: 'current', req: currentPose() }
                         : { kind: 'animation', animationId: selectedAnim, fps, emotion: snap.userEmotion },
                   },
                   onProgress,
