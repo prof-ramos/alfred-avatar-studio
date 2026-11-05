@@ -567,6 +567,7 @@ Cobrir com testes automatizados:
 - Metadados, dimensões e limites nas exportações (PNG, Spritesheet, MJPEG, C Array).
 
 ### 14.2. Testes de entrada e gestos (Playwright)
+O plano E2E detalhado, com matriz de casos, rastreabilidade e critérios de saída, está em [`docs/PLANO_E2E.md`](./docs/PLANO_E2E.md). Itens mínimos:
 - Conversão de coordenadas em escala 1×, 2× e 4× nos três modos de visualização.
 - Independência em relação ao `devicePixelRatio` do monitor.
 - Rejeição de cliques fora do círculo e cancelamento imediato ao sair da área útil.
