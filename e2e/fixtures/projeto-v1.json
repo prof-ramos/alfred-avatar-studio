@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "project": { "id": "alfred-legado", "name": "Alfred legado (v1)", "createdAt": "2026-06-01T12:00:00Z", "updatedAt": "2026-06-01T12:00:00Z" },
+  "device": { "profile": "XIAOZHI_ROBOT_BALL_128", "targetFps": 15 },
+  "avatar": { "background": "#000000", "color": "#A7F3D0", "face": { "eyes": { "width": 30, "height": 40 }, "mouth": { "curvature": -0.2 } } },
+  "runtime": { "randomSeed": 7 }
+}

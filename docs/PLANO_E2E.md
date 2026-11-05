@@ -4,7 +4,7 @@
 **Data:** 05/11/2026  
 **Referência:** [PRD.md](../PRD.md) v1.4 (§7.1, §10, §11, §12, §14.2)  
 **Ferramenta:** Playwright (`@playwright/test`)  
-**Status:** Planejamento. Ainda não existe código da aplicação; os casos abaixo orientam a implementação dos testes à medida que cada fase for entregue.
+**Status:** Implementado. Os casos estão em `e2e/` e o resultado da última execução está na seção 12.
 
 ---
 
@@ -122,21 +122,32 @@ Textos visíveis continuam em português e são verificados por `getByRole`/`get
 
 Disponível somente quando a URL contém `?test=1` **e** a build é de desenvolvimento/teste (`import.meta.env.MODE !== 'production'`):
 
+Implementação: `src/testBridge.ts`.
+
 ```ts
 interface AlfredTestBridge {
   getState(): OperationalState;            // 'idle' | 'wake' | ...
   getEmotion(): { id: EmotionId; intensity: number };
   getLastTouchEvent(): LogicalTouchEvent | null;
+  getTouchHistory(): LogicalTouchEvent[];
   getGestureLog(): Array<{ type: 'tap' | 'longPress' | 'swipe' | 'cancel'; direction?: 'up' | 'down' | 'left' | 'right' }>;
-  getStateLog(): Array<{ state: OperationalState; at: number }>;
+  getStateLog(): Array<{ state: OperationalState; at: number; forced?: boolean }>;
+  /** Botão Boot: nível 0 = pressionado (ativo em nível baixo). */
+  getButtonLog(): Array<{ gpio: 0; level: 0 | 1; source: 'hardware_button'; timestamp: number }>;
   getFps(): number;
   getSeed(): number;
+  getBlinks(fromMs: number, toMs: number): number[];
   getAudioLog(): Array<{ cue: 'wake' | 'success' | 'error' | 'speech'; gain: number }>;
+  getPose(): FacePose | null;
+  getPlayback(): { animId: string | null; active: boolean; playing: boolean; position: number };
+  getProject(): Project;
   isRenderLoopRunning(): boolean;
-  resetStorage(): Promise<void>;
+  flush(): Promise<void>;                  // força o salvamento no IndexedDB
 }
 declare global { interface Window { __ALFRED_TEST__?: AlfredTestBridge } }
 ```
+
+O isolamento do IndexedDB vem do contexto novo que o Playwright cria para cada teste; não há `resetStorage()`.
 
 A ponte apenas **lê** o estado; as ações sempre ocorrem pela interface (clique, teclado, ponteiro), para não mascarar defeitos de UI.
 
@@ -201,7 +212,7 @@ Prioridade: **P0** bloqueia a entrega da fase; **P1** deve passar ou ter exceç�
 | E2E-F1-08 | RF-07 | Tap no centro do display | `LogicalTouchEvent` `down`/`up` em ~(120,120), `source` correto; gesto `tap`; transição para `wake` | P0 |
 | E2E-F1-09 | RF-07 | Clique em `foraDoCirculo`, na moldura, na carcaça e nas pernas | Nenhum `LogicalTouchEvent`; estado permanece `idle` | P0 |
 | E2E-F1-10 | RF-07 | Pressionar no centro e arrastar para fora do círculo | Evento `cancel` emitido ao cruzar a borda; nenhum gesto reconhecido | P0 |
-| E2E-F1-11 | RF-08 | Clicar em `gpio0-button` no modo Robô | `source: 'hardware_button'`; estado `listening` (Push-to-Talk) | P0 |
+| E2E-F1-11 | RF-08 | Pressionar e soltar `gpio0-button` no modo Robô | `getButtonLog()` registra GPIO 0 em nível 0 e depois 1, com `source: 'hardware_button'`; estado `listening` enquanto pressionado (Push-to-Talk) e `thinking` ao soltar | P0 |
 | E2E-F1-12 | RF-08 | Teclas `B` e barra de espaço | Mesmo efeito de E2E-F1-11; atalho **não** dispara com foco em campo de texto | P0 |
 | E2E-F1-13 | RF-05, RF-06 | Executar `scenario-dialog` | Sequência `idle → wake → listening → thinking → speaking → idle` em ordem | P0 |
 | E2E-F1-14 | RF-06 | Executar cenários de tarefa, falha e conectividade | Sequências do PRD §4.4 (`executing → success`, `error`, `connecting`) | P0 |
@@ -218,7 +229,7 @@ Prioridade: **P0** bloqueia a entrega da fase; **P1** deve passar ou ter exceç�
 | E2E-F2-03 | RF-12, RF-05 | Estado `speaking` com `curious` a 0.8 | Estado e emoção coexistem; trocar emoção não altera estado e vice-versa | P0 |
 | E2E-F2-04 | RF-13 | Seed 42, avançar relógio 60 s duas vezes (recarregando entre elas) | Sequências de piscadas idênticas (log e *snapshots* em instantes fixos) | P1 |
 | E2E-F2-05 | RF-13 | Alterar seed para 7 | Sequência de piscadas diferente da seed 42 | P1 |
-| E2E-F2-06 | RF-17 | Ativar `rgb565-toggle` com gradiente na paleta | Pixels lidos do canvas têm R e B múltiplos de 8 e G múltiplo de 4 (após arredondamento); desativar restaura | P1 |
+| E2E-F2-06 | RF-17 | Ativar `rgb565-toggle` com gradiente na paleta | Todos os pixels lidos do canvas pertencem aos níveis de R/B com 5 bits e G com 6 bits (expansão por replicação de bits); desativar restaura | P1 |
 | E2E-F2-07 | RF-17, RF-19 | Exportar PNG com prévia RGB565 ativa | PNG exportado mantém 32 bits sem quantização | P1 |
 | E2E-F2-08 | RF-18 | Exportar projeto JSON | Arquivo válido no schema v1.4, `schemaVersion: 2`, `device.profile: XIAOZHI_ROBOT_BALL_128` | P0 |
 | E2E-F2-09 | RF-18 | Importar o JSON exportado em contexto limpo | Igualdade profunda com o original (exceto `updatedAt`); canvas idêntico | P0 |
@@ -265,9 +276,10 @@ Prioridade: **P0** bloqueia a entrega da fase; **P1** deve passar ou ter exceç�
 
 ## 6. Regressão visual
 
-- Alvo: `display-canvas` (não a página inteira) por estado operacional e por emoção, com seed 42 e relógio parado em `t = 0` e `t = 1000 ms`.
+- Alvo: pixels do canvas lógico 240 × 240 (via `toDataURL`, comparados com `toMatchSnapshot`), sem a barra de status, a carcaça ou o marcador de toque. Um quadro por estado operacional (10) e por emoção (5), com seed 42, comportamento espontâneo desligado e relógio parado.
 - Somente no projeto `chromium` (`@visual`); WebKit é excluído para evitar falsos positivos de antialiasing.
 - Tolerância: `maxDiffPixelRatio: 0.001`.
+- As imagens de referência levam o sufixo da plataforma (`-chromium-linux.png`). No macOS, gere as do próprio sistema com `npm run test:e2e:update` na primeira execução.
 - Atualização de *baselines*: `npm run test:e2e:update`, apenas em commit dedicado e com revisão das imagens no PR.
 
 ---
@@ -384,5 +396,25 @@ Uma fase só é declarada concluída quando:
 | Diferenças de renderização de canvas entre navegadores | *Baselines* visuais apenas em Chromium; WebKit valida comportamento |
 | Instabilidade de testes dependentes de tempo | `page.clock` em todos os casos de gestos, cenários e animação; tempo real só em E2E-TX-04 |
 | Variação de FPS conforme a máquina | E2E-TX-04 informativo no CI e bloqueante apenas na máquina de referência |
-| Ponte de teste vazar para produção | Ativação condicionada a `?test=1` e modo diferente de produção; teste dedicado na build de produção confirma `window.__ALFRED_TEST__ === undefined` |
+| Ponte de teste vazar para produção | Ativação condicionada a `?test=1` e modo diferente de produção. Na build de produção, o código da ponte é eliminado; verificado com `grep -c __ALFRED_TEST__ dist/assets/*.js` (resultado 0) |
 | E2E não comprova funcionamento no hardware | Validação física permanece nas Fases 4 e 5 (inspeção e teste via cartão MicroSD) |
+
+---
+
+## 12. Estado de execução
+
+Última execução: 05/11/2026, em contêiner Linux (Chromium 1243 / Playwright 1.63.0).
+
+| Suíte | Resultado |
+|---|---|
+| Vitest (`npm test`) | 83 de 83 passando, em 9 arquivos |
+| Playwright `chromium` | 68 de 68 passando |
+| Playwright `chromium-dpr2` (`@dpr`) | 5 de 5 passando |
+| Instabilidade (`--repeat-each=3`, `chromium`) | 204 de 204 passando, sem testes instáveis |
+| Playwright `webkit` | **Não executado**: o navegador WebKit não está instalado no ambiente usado. Executar no Mac com `npx playwright install webkit && npx playwright test --project=webkit` |
+
+Verificações ainda pendentes, conforme o PRD §1:
+
+1. Projeto `webkit` (acima).
+2. E2E-TX-04 na máquina de referência (MacBook Air M3); no contêiner, o FPS medido foi de ~30 com alvo 30 e ~15 com alvo 15.
+3. Escuta real do áudio sintético: os testes verificam apenas o registro de sinais e o ganho.

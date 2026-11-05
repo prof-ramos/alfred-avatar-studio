@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 2,
+  "project": { "id": "quebrado", "name": "Quebrado" },
+  "device": { "profile": "XIAOZHI_ROBOT_BALL_128", "targetFps": 60 },
+  "avatar": { "primaryColor": "azul", "parameters": { "eyes": { "width": "grande" } } }
+}

@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 2,
+  "project": { "id": "xss", "name": "<img src=x onerror=\"window.__xss=1\">" },
+  "device": { "profile": "XIAOZHI_ROBOT_BALL_128" },
+  "avatar": { "primaryColor": "#7DD3FC" },
+  "animations": { "a": { "name": "<script>window.__xss=2</script>", "durationMs": 1000, "mode": "once", "keyframes": [] } }
+}
