@@ -4,6 +4,10 @@
 
 Aplicação local para criação, personalização, animação, simulação e preparação de avatares para o assistente físico **Alfred**, baseado no dispositivo comercial **Spotpear Ball V2** (comercializado como XiaoZhi AI Voice Chat Robot Ball / DeepSeek Chat Robot).
 
+**Acesso web:** [alfred.proframos.com](https://alfred.proframos.com), público e sem autenticação. Projetos e preferências ficam no IndexedDB de cada navegador/origem, sem sincronização entre dispositivos. Use **Projetos → Exportar JSON** para guardar uma cópia.
+
+A arquitetura de produção, versão publicada, manutenção e reversão estão em [docs/IMPLANTACAO.md](./docs/IMPLANTACAO.md).
+
 ---
 
 ## 📖 Especificação Completa
