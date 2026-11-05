@@ -10,6 +10,10 @@ Toda a especificação técnica detalhada, arquitetura de software, mapeamento d
 
 👉 [**PRD.md**](./PRD.md) (Versão 1.4)
 
+O planejamento dos testes de ponta a ponta (Playwright) está em:
+
+👉 [**docs/PLANO_E2E.md**](./docs/PLANO_E2E.md)
+
 ---
 
 ## 🎯 Visão Geral do Hardware Alvo
