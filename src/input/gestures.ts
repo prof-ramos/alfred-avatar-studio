@@ -96,34 +96,28 @@ export function swipeDirection(dx: number, dy: number): SwipeDirection {
  * assim que o ponteiro sai dele.
  */
 export class CircularContactFilter {
-  private down = false;
+  private lastContact: LogicalTouchEvent | null = null;
 
   get isDown(): boolean {
-    return this.down;
+    return this.lastContact !== null;
   }
 
   filter(e: LogicalTouchEvent): LogicalTouchEvent | null {
     const inside = isInsideDisplayCircle(e.x, e.y);
-    switch (e.phase) {
-      case 'down':
-        if (!inside) return null;
-        this.down = true;
-        return e;
-      case 'move':
-        if (!this.down) return null;
-        if (!inside) {
-          this.down = false;
-          return { ...e, phase: 'cancel' };
-        }
-        return e;
-      case 'up':
-        if (!this.down) return null;
-        this.down = false;
-        return inside ? e : { ...e, phase: 'cancel' };
-      case 'cancel':
-        if (!this.down) return null;
-        this.down = false;
-        return e;
+    if (e.phase === 'down') {
+      if (!inside) return null;
+      this.lastContact = e;
+      return e;
     }
+
+    const last = this.lastContact;
+    if (!last) return null;
+    if (e.phase === 'cancel' || !inside) {
+      this.lastContact = null;
+      return { ...e, x: last.x, y: last.y, phase: 'cancel' };
+    }
+
+    this.lastContact = e.phase === 'up' ? null : e;
+    return e;
   }
 }

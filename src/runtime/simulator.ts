@@ -112,6 +112,7 @@ export class Simulator {
   private lastTouch: LogicalTouchEvent | null = null;
   private invalidTransitions: DiagSnapshot['invalidTransitions'] = [];
 
+  private readonly unsubscribeStore: () => void;
   private listeners = new Set<Listener>();
   private diagListeners = new Set<Listener>();
   private snapshot: SimSnapshot;
@@ -138,6 +139,19 @@ export class Simulator {
     this.diagSnapshot = this.buildDiag();
     this.stateEnteredAt = this.timers.now();
     this.stateLog.push({ state: 'idle', at: this.stateEnteredAt });
+
+    let activeProjectId: string | undefined;
+    const syncActiveProject = () => {
+      const { ready, project } = store.getState();
+      if (!ready || project.project.id === activeProjectId) return;
+      activeProjectId = project.project.id;
+      const { defaultState, defaultEmotion } = project.runtime;
+      this.syncAudioSettings();
+      this.setEmotion({ id: defaultEmotion, intensity: defaultEmotion === 'neutral' ? 1 : 0.8 });
+      this.forceState(defaultState);
+    };
+    this.unsubscribeStore = store.subscribe(syncActiveProject);
+    syncActiveProject();
   }
 
   // ---------------------------------------------------------------- assinaturas
@@ -614,6 +628,7 @@ export class Simulator {
   }
 
   dispose(): void {
+    this.unsubscribeStore();
     this.stopLoop();
     this.runner.cancel();
     this.audio.stopSpeech();

@@ -19,6 +19,7 @@ export const PROFILE = {
 
 /** Verdadeiro quando (x, y) está dentro do círculo visível: (x-120)² + (y-120)² <= 120². */
 export function isInsideDisplayCircle(x: number, y: number): boolean {
+  if (x < 0 || x >= DISPLAY_SIZE || y < 0 || y >= DISPLAY_SIZE) return false;
   const dx = x - DISPLAY_CENTER;
   const dy = y - DISPLAY_CENTER;
   return dx * dx + dy * dy <= DISPLAY_RADIUS * DISPLAY_RADIUS;

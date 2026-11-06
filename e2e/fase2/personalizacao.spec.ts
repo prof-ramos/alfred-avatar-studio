@@ -155,6 +155,27 @@ test.describe('Fase 2 @f2', () => {
     await ctx.close();
   });
 
+  test('importa os valores iniciais na sessão aberta e os preserva no JSON', async ({ page }) => {
+    await openStudio(page);
+    expect(await getState(page)).toBe('idle');
+    const project = await bridge<{ runtime: Record<string, unknown> }>(page, 'getProject');
+    project.runtime.defaultState = 'sleep';
+    project.runtime.defaultEmotion = 'sad';
+
+    await page.getByTestId('tab-projects').click();
+    await page.getByTestId('project-import-input').setInputFiles({
+      name: 'sleep-sad.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(project)),
+    });
+    await expect.poll(() => getState(page)).toBe('sleep');
+    expect(await bridge(page, 'getEmotion')).toEqual({ id: 'sad', intensity: 0.8 });
+
+    await page.getByTestId('tab-export').click();
+    const { bytes } = await downloadBytes(page, () => page.getByTestId('project-export-json').click());
+    expect(JSON.parse(Buffer.from(bytes).toString('utf8')).runtime).toEqual(project.runtime);
+  });
+
   test('E2E-F2-10 rejeita JSON inválido, malformado e com marcação sem executar código', async ({ page }) => {
     await openStudio(page);
     let dialogs = 0;

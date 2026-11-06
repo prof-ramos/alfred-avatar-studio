@@ -16,7 +16,7 @@ export interface Rect {
 export function clientToLogical(clientX: number, clientY: number, rect: Rect): { x: number; y: number } {
   const x = ((clientX - rect.left) / rect.width) * DISPLAY_SIZE;
   const y = ((clientY - rect.top) / rect.height) * DISPLAY_SIZE;
-  return { x: Math.floor(x * 100) / 100, y: Math.floor(y * 100) / 100 };
+  return { x: Math.floor(x), y: Math.floor(y) };
 }
 
 /** Converte coordenadas lógicas no centro do pixel correspondente, em CSS px. */

@@ -17,10 +17,6 @@ root.render(
 );
 
 void store.init().then(() => {
-  const rt = store.project.runtime;
-  sim.setEmotion({ id: rt.defaultEmotion, intensity: rt.defaultEmotion === 'neutral' ? 1 : 0.8 });
-  if (rt.defaultState !== 'idle') sim.forceState(rt.defaultState);
-  sim.syncAudioSettings();
   document.documentElement.dataset.ready = 'true';
   root.render(
     <StrictMode>
